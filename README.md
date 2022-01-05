@@ -4,11 +4,15 @@ simple video streaming server & client based on: [Developing a Live Video Stream
 
 
 
+<br/>
+
 ### TODO
 
 - [ ] [ERROR] connectionabortederror 10053
 
 
+
+<br/>
 
 ### how to install
 
@@ -20,6 +24,8 @@ $ pip install -r requirements.txt
 
 
 
+<br/>
+
 ### how to run
 
 run server
@@ -29,6 +35,8 @@ $ python server.py --video {videopath}
 ```
 
 
+
+<br/>
 
 and then run client on a separate bash
 
