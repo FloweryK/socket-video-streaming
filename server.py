@@ -4,53 +4,67 @@ import pickle
 import struct
 import time
 import argparse
+from config import SERVER_HOST, SERVER_PORT
 
 
-def run():
-    # argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--video", required=True, type=str)
-    args = parser.parse_args()
-    video_path = args.video
-
+def stream_video(video_path):
+    # Create a TCP/IP socket
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    
-    host_name = socket.gethostname()
-    host_ip = socket.gethostbyname(host_name)
-    port = 10050
-    print('Host IP: ', host_ip)
-    
-    socket_address = (host_ip, port)
-    print("Socket created")
+    socket_address = (SERVER_HOST, SERVER_PORT)
+    print(f"Host IP: {SERVER_HOST}")
 
+    # Bind the socket to the address and port
     server_socket.bind(socket_address)
     print("Socket bind complete")
 
+    # Listen for incoming connections
     server_socket.listen(5)
     print("Socket now listening")
 
-    # stream video
     while True:
+        # Wait for a connection
         client_socket, addr = server_socket.accept()
         print("Connection from:", addr)
 
         if client_socket:
+            # Open the video file
             vid = cv2.VideoCapture(video_path)
-            while (vid.isOpened()):
+            while vid.isOpened():
                 time.sleep(0.1)
                 success, frame = vid.read()
 
                 if success:
-                    a = pickle.dumps(frame)
-                    message = struct.pack("Q", len(a)) + a
+                    # Serialize the frame
+                    data = pickle.dumps(frame)
+
+                    # Pack the frame size and data
+                    message = struct.pack("Q", len(data)) + data
+
+                    # Send data to the client
                     client_socket.sendall(message)
 
+                    # Display the frame being sent
                     cv2.imshow("sending...", frame)
                     key = cv2.waitKey(10)
+
+                    # Close the socket
                     if key == 13:
                         client_socket.close()
-        
+                        break
+
+            # Release the video capture object
+            vid.release()
+
+
+def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--video", required=True, type=str)
+    args = parser.parse_args()
+
+    # Start streaming video
+    stream_video(args.video)
 
 
 if __name__ == "__main__":
-    run()
+    main()
